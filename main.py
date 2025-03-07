@@ -31,13 +31,12 @@ if __name__ == "__main__":
     SPLIT = "dev"
     # load dataset from Hub
     eval_dataset = datasets.load_dataset("adyen/DABstep", name="tasks", split=f"{SPLIT}")
-    filtered_eval_dataset = eval_dataset
-    filtered_eval_dataset = datasets.Dataset.from_list(list(filter(lambda x: x["level"] == 'easy', eval_dataset)))
-    filtered_eval_dataset = filtered_eval_dataset.select(range(3))
+    # eval_dataset = datasets.Dataset.from_list(list(filter(lambda x: x["level"] == 'easy', eval_dataset)))
+    # eval_dataset = eval_dataset.select(range(3))
 
     # run agent
     agent_answers = run_benchmark(
-        dataset=filtered_eval_dataset,
+        dataset=eval_dataset,
         agent=agent,
         context_files=context_files,
         tracer=tracer
@@ -46,7 +45,7 @@ if __name__ == "__main__":
     # evaluation
     accuracy, task_scores_df = eval_accuracy(
         agent_answers_df=pd.DataFrame(agent_answers),
-        tasks_with_gt_df=filtered_eval_dataset.to_pandas(),
+        tasks_with_gt_df=eval_dataset.to_pandas(),
         return_eval_df=True
     )
 
