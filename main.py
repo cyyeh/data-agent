@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from smolagents import CodeAgent
 from smolagents.models import OpenAIServerModel
 
-from utils import download_dataset, CONTEXT_FILENAMES, clean_reasoning_trace, setup_langfuse
+from utils import download_dataset, CONTEXT_FILENAMES, setup_langfuse
 
 load_dotenv()
 
@@ -43,7 +43,3 @@ PROMPT = PROMPT.format(
 )
 
 answer = agent.run(PROMPT)
-
-
-for step in clean_reasoning_trace(agent.memory.steps):
-    print(step)
