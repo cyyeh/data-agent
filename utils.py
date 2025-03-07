@@ -119,7 +119,7 @@ def run_benchmark(
                 guidelines=task['guidelines']
             )
 
-            answer = agent.run(prompt)
+            answer = agent.run(prompt, reset=False)
 
             task_answer = {
                 "task_id": tid,
