@@ -1,45 +1,50 @@
+import datasets
+import pandas as pd
 from dotenv import load_dotenv
 from smolagents import CodeAgent
 from smolagents.models import OpenAIServerModel
 
-from utils import download_dataset, CONTEXT_FILENAMES, setup_langfuse
+from utils import download_dataset, setup_langfuse, run_benchmark, eval_accuracy
 
 load_dotenv()
 
 setup_langfuse()
-context_files = download_dataset()
 
 
-MODEL_ID = "gpt-4o-mini-2024-07-18" # "o3-mini-2025-01-31"
-MAX_STEPS = 7
+if __name__ == "__main__":
+    context_files = download_dataset()
 
-agent = CodeAgent(
-    tools=[],
-    model=OpenAIServerModel(MODEL_ID),
-    additional_authorized_imports=["numpy", "pandas", "json", "csv", "os", "glob", "markdown"],
-    max_steps=MAX_STEPS,
-)
-# give agent power to open files
-agent.python_executor.send_tools({"open": open})
+    # "gpt-4o-mini-2024-07-18"
+    # "o3-mini-2025-01-31"
+    # "o1-mini-2024-09-12"
+    MODEL_ID = "gpt-4o-mini-2024-07-18"
+    MAX_STEPS = 7
 
-PROMPT = """You are an expert data analyst and you will answer factoid questions by loading and referencing the files/documents listed below.
-You have these files available:
-{context_files}
-Don't forget to reference any documentation in the data dir before answering a question.
+    agent = CodeAgent(
+        tools=[],
+        model=OpenAIServerModel(MODEL_ID),
+        additional_authorized_imports=["numpy", "pandas", "json", "csv", "os", "glob", "markdown"],
+        max_steps=MAX_STEPS,
+    )
+    # give agent power to open files
+    agent.python_executor.send_tools({"open": open})
 
-Here is the question you need to answer:
-{question}
+    SPLIT = "dev"
+    # load dataset from Hub
+    eval_dataset = datasets.load_dataset("adyen/DABstep", name="tasks", split=f"{SPLIT}")
+    filtered_eval_dataset = eval_dataset
+    # filtered_eval_dataset = datasets.Dataset.from_list(list(filter(lambda x: x["level"] == 'easy', eval_dataset)))
+    # filtered_eval_dataset = filtered_eval_dataset.select(range(3))
 
-Here are the guidelines you must follow when answering the question above:
-{guidelines}
-"""
-question = "What are the unique set of merchants in the payments data?"
-guidelines = "Answer must be a comma separated list of the merchant names. If a question does not have a relevant or applicable answer for the task, please respond with 'Not Applicable'."
+    # run agent
+    agent_answers = run_benchmark(dataset=filtered_eval_dataset, agent=agent, context_files=context_files)
 
-PROMPT = PROMPT.format(
-    context_files=context_files,
-    question=question,
-    guidelines=guidelines
-)
+    # evaluation
+    accuracy, task_scores_df = eval_accuracy(
+        agent_answers_df=pd.DataFrame(agent_answers),
+        tasks_with_gt_df=filtered_eval_dataset.to_pandas(),
+        return_eval_df=True
+    )
 
-answer = agent.run(PROMPT)
+    print(f"Accuracy: {accuracy}")
+    print(task_scores_df)

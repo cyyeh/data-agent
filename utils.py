@@ -1,10 +1,16 @@
 import base64
 import os
 import shutil
+import json
+import pandas as pd
+from typing import Tuple
+from pathlib import Path
 
 import datasets
 from huggingface_hub import hf_hub_download
+from dabstep_benchmark.utils import evaluate
 from smolagents import CodeAgent
+from smolagents.agents import ActionStep, TaskStep, PlanningStep
 
 
 CONTEXT_FILENAMES = [
@@ -75,9 +81,18 @@ def download_dataset(data_destination_dir: str = "/tmp/DABstep-data"):
     return context_files
 
 
-def run_benchmark(dataset: datasets.Dataset, agent: CodeAgent, context_files: list[str]) -> list[dict]:
-    global PROMPT
-    
+# You can inspect the steps taken by the agent by doing this
+def clean_reasoning_trace(trace: list[ActionStep, TaskStep, PlanningStep]) -> list:
+    for step in trace:
+        # Remove memory from logs to make them more compact.
+        if hasattr(step, "memory"):
+            step.memory = None
+        if isinstance(step, ActionStep):
+            step.agent_memory = None
+    return trace
+
+
+def run_benchmark(dataset: datasets.Dataset, agent: CodeAgent, context_files: list[str]) -> list[dict]:    
     agent_answers = []
     for task in dataset:
         tid = task['task_id']
@@ -93,9 +108,36 @@ def run_benchmark(dataset: datasets.Dataset, agent: CodeAgent, context_files: li
         task_answer = {
             "task_id": str(tid),
             "agent_answer": str(answer),
-            "reasoning_trace": str(clean_reasoning_trace(agent.logs))
+            "reasoning_trace": str(clean_reasoning_trace(agent.memory.steps))
         }
 
         agent_answers.append(task_answer)
 
     return agent_answers
+
+
+def write_jsonl(data: list[dict], filepath: Path) -> None:
+    """Write a list of dictionaries to a JSONL file."""
+    # Ensure the directory exists
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(filepath, "w") as file:
+        for entry in data:
+            file.write(json.dumps(entry) + "\n")
+
+
+def eval_accuracy(
+    agent_answers_df: pd.DataFrame,
+    tasks_with_gt_df: pd.DataFrame,
+    return_eval_df: bool = False
+) -> Tuple[float, pd.DataFrame | None]:
+    task_scores = evaluate(agent_answers=agent_answers_df, tasks_with_gt=tasks_with_gt_df)
+    task_scores_df = pd.DataFrame(task_scores)
+    task_scores_df["correct_answer"] = tasks_with_gt_df["answer"]
+    task_scores_df["question"] = tasks_with_gt_df["question"]
+    accuracy = task_scores_df["score"].mean()
+
+    if return_eval_df:
+        return accuracy, task_scores_df
+    else:
+        return accuracy, None
