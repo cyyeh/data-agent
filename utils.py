@@ -2,9 +2,11 @@ import base64
 import os
 import shutil
 import json
+import uuid
 import pandas as pd
 from typing import Tuple
 from pathlib import Path
+from opentelemetry.trace import Tracer
 
 import datasets
 from huggingface_hub import hf_hub_download
@@ -37,8 +39,9 @@ Here are the guidelines you must follow when answering the question above:
 """
 
 
-def setup_langfuse():
+def setup_langfuse() -> Tracer:
     from dotenv import load_dotenv
+    from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from openinference.instrumentation.smolagents import SmolagentsInstrumentor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -58,6 +61,9 @@ def setup_langfuse():
     trace_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
     
     SmolagentsInstrumentor().instrument(tracer_provider=trace_provider)
+
+    trace.set_tracer_provider(trace_provider)
+    return trace.get_tracer("my.tracer.name")
 
 
 def download_dataset(data_destination_dir: str = "/tmp/DABstep-data"):
@@ -92,26 +98,35 @@ def clean_reasoning_trace(trace: list[ActionStep, TaskStep, PlanningStep]) -> li
     return trace
 
 
-def run_benchmark(dataset: datasets.Dataset, agent: CodeAgent, context_files: list[str]) -> list[dict]:    
+def run_benchmark(
+    dataset: datasets.Dataset, 
+    agent: CodeAgent,
+    context_files: list[str],
+    tracer: Tracer
+) -> list[dict]:
+    session_id = str(uuid.uuid4())
+
     agent_answers = []
     for task in dataset:
-        tid = task['task_id']
+        with tracer.start_as_current_span("Smolagent-Trace") as span:
+            span.set_attribute("langfuse.session.id", session_id)
+            tid = task['task_id']
 
-        prompt = PROMPT.format(
-            context_files=context_files,
-            question=task['question'],
-            guidelines=task['guidelines']
-        )
+            prompt = PROMPT.format(
+                context_files=context_files,
+                question=task['question'],
+                guidelines=task['guidelines']
+            )
 
-        answer = agent.run(prompt)
+            answer = agent.run(prompt)
 
-        task_answer = {
-            "task_id": str(tid),
-            "agent_answer": str(answer),
-            "reasoning_trace": str(clean_reasoning_trace(agent.memory.steps))
-        }
+            task_answer = {
+                "task_id": str(tid),
+                "agent_answer": str(answer),
+                "reasoning_trace": str(clean_reasoning_trace(agent.memory.steps))
+            }
 
-        agent_answers.append(task_answer)
+            agent_answers.append(task_answer)
 
     return agent_answers
 

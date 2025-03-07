@@ -8,8 +8,7 @@ from utils import download_dataset, setup_langfuse, run_benchmark, eval_accuracy
 
 load_dotenv()
 
-setup_langfuse()
-
+tracer = setup_langfuse()
 
 if __name__ == "__main__":
     context_files = download_dataset()
@@ -33,11 +32,16 @@ if __name__ == "__main__":
     # load dataset from Hub
     eval_dataset = datasets.load_dataset("adyen/DABstep", name="tasks", split=f"{SPLIT}")
     filtered_eval_dataset = eval_dataset
-    # filtered_eval_dataset = datasets.Dataset.from_list(list(filter(lambda x: x["level"] == 'easy', eval_dataset)))
-    # filtered_eval_dataset = filtered_eval_dataset.select(range(3))
+    filtered_eval_dataset = datasets.Dataset.from_list(list(filter(lambda x: x["level"] == 'easy', eval_dataset)))
+    filtered_eval_dataset = filtered_eval_dataset.select(range(3))
 
     # run agent
-    agent_answers = run_benchmark(dataset=filtered_eval_dataset, agent=agent, context_files=context_files)
+    agent_answers = run_benchmark(
+        dataset=filtered_eval_dataset,
+        agent=agent,
+        context_files=context_files,
+        tracer=tracer
+    )
 
     # evaluation
     accuracy, task_scores_df = eval_accuracy(
