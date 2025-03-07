@@ -1,8 +1,10 @@
 import base64
 import os
 import shutil
+
+import datasets
 from huggingface_hub import hf_hub_download
-from smolagents.agents import ActionStep, TaskStep, PlanningStep
+from smolagents import CodeAgent
 
 
 CONTEXT_FILENAMES = [
@@ -14,6 +16,19 @@ CONTEXT_FILENAMES = [
     "data/context/merchant_data.json",
     "data/context/manual.md",
 ]
+
+
+PROMPT = """You are an expert data analyst and you will answer factoid questions by loading and referencing the files/documents listed below.
+You have these files available:
+{context_files}
+Don't forget to reference any documentation in the data dir before answering a question.
+
+Here is the question you need to answer:
+{question}
+
+Here are the guidelines you must follow when answering the question above:
+{guidelines}
+"""
 
 
 def setup_langfuse():
@@ -40,8 +55,6 @@ def setup_langfuse():
 
 
 def download_dataset(data_destination_dir: str = "/tmp/DABstep-data"):
-    global CONTEXT_FILENAMES
-
     if os.path.exists(data_destination_dir):
         shutil.rmtree(data_destination_dir)
 
@@ -61,12 +74,28 @@ def download_dataset(data_destination_dir: str = "/tmp/DABstep-data"):
 
     return context_files
 
-# You can inspect the steps taken by the agent by doing this
-def clean_reasoning_trace(trace: list[ActionStep, TaskStep, PlanningStep]) -> list:
-  for step in trace:
-      # Remove memory from logs to make them more compact.
-      if hasattr(step, "memory"):
-          step.memory = None
-      if isinstance(step, ActionStep):
-          step.agent_memory = None
-  return trace
+
+def run_benchmark(dataset: datasets.Dataset, agent: CodeAgent, context_files: list[str]) -> list[dict]:
+    global PROMPT
+    
+    agent_answers = []
+    for task in dataset:
+        tid = task['task_id']
+
+        prompt = PROMPT.format(
+            context_files=context_files,
+            question=task['question'],
+            guidelines=task['guidelines']
+        )
+
+        answer = agent.run(prompt)
+
+        task_answer = {
+            "task_id": str(tid),
+            "agent_answer": str(answer),
+            "reasoning_trace": str(clean_reasoning_trace(agent.logs))
+        }
+
+        agent_answers.append(task_answer)
+
+    return agent_answers
