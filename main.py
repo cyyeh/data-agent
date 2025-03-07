@@ -1,7 +1,7 @@
 import datasets
 import pandas as pd
 from dotenv import load_dotenv
-from smolagents import CodeAgent, OpenAIServerModel, FinalAnswerTool
+from smolagents import CodeAgent, OpenAIServerModel
 
 from utils import download_dataset, setup_langfuse, run_benchmark, eval_accuracy
 
