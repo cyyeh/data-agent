@@ -9,7 +9,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-smolagents = "^1.10.0"
+smolagents = {extras = ["openai"], version = "^1.10.0"}
 datasets = "^3.3.2"
 python-dotenv = "^1.0.1"
 dabstep-benchmark = {git = "https://git@hf.co/spaces/adyen/DABstep.git", rev = "main"}
