@@ -8,9 +8,9 @@ from utils import download_dataset, setup_langfuse, run_benchmark, eval_accuracy
 
 load_dotenv()
 
-tracer = setup_langfuse()
 
 if __name__ == "__main__":
+    tracer = setup_langfuse()
     context_files = download_dataset()
 
     # "gpt-4o-mini-2024-07-18"
