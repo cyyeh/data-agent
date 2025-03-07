@@ -6,7 +6,12 @@ This repository contains the data agent code for the DABstep benchmark.
 
 - install poetry
 - prepare the environment: `poetry install`
-- prepare the environment variables: copying `.env.example` to `.env` and filling in the `HF_TOKEN`(make sure to create a token with read access to the DABstep dataset, DABstep space and inference API)
+- prepare the environment variables: copying `.env.example` to `.env` and filling in environment variables
+  - `HF_TOKEN`: make sure to create a token with read access to the DABstep dataset, DABstep space and inference API
+  - `OPENAI_API_KEY`: OpenAI API key if you want to use OpenAI model
+  - `LANGFUSE_PUBLIC_KEY`: Langfuse public key
+  - `LANGFUSE_SECRET_KEY`: Langfuse secret key
+  - `LANGFUSE_HOST`: Langfuse host
 
 ## References
 
