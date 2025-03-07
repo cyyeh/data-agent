@@ -13,6 +13,12 @@ This repository contains the data agent code for the DABstep benchmark.
   - `LANGFUSE_SECRET_KEY`: Langfuse secret key
   - `LANGFUSE_HOST`: Langfuse host
 
+## Run the agent
+
+```bash
+poetry run python main.py
+```
+
 ## References
 
 - [DABStep: Data Agent Benchmark for Multi-step Reasoning](https://huggingface.co/blog/dabstep)
