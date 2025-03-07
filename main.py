@@ -1,8 +1,7 @@
 import datasets
 import pandas as pd
 from dotenv import load_dotenv
-from smolagents import CodeAgent
-from smolagents.models import OpenAIServerModel
+from smolagents import CodeAgent, OpenAIServerModel
 
 from utils import download_dataset, setup_langfuse, run_benchmark, eval_accuracy
 
@@ -21,7 +20,12 @@ if __name__ == "__main__":
 
     agent = CodeAgent(
         tools=[],
-        model=OpenAIServerModel(MODEL_ID),
+        model=OpenAIServerModel(
+            MODEL_ID,
+            temperature=0.0,
+            seed=0,
+            max_completion_tokens=4096,
+        ),
         additional_authorized_imports=["numpy", "pandas", "json", "csv", "os", "glob", "markdown"],
         max_steps=MAX_STEPS,
     )
