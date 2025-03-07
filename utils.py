@@ -54,11 +54,12 @@ def download_dataset(data_destination_dir: str = "/tmp/DABstep-data"):
             force_download=True
         )
 
-    CONTEXT_FILENAMES = [f"{data_destination_dir}/{filename}" for filename in CONTEXT_FILENAMES]
+    context_files = [f"{data_destination_dir}/{filename}" for filename in CONTEXT_FILENAMES]
 
-    for file in CONTEXT_FILENAMES:
+    for file in context_files:
         assert os.path.exists(file), f"{file} does not exist."
 
+    return context_files
 
 # You can inspect the steps taken by the agent by doing this
 def clean_reasoning_trace(trace: list[ActionStep, TaskStep, PlanningStep]) -> list:

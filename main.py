@@ -7,7 +7,7 @@ from utils import download_dataset, CONTEXT_FILENAMES, setup_langfuse
 load_dotenv()
 
 setup_langfuse()
-download_dataset()
+context_files = download_dataset()
 
 
 MODEL_ID = "gpt-4o-mini-2024-07-18" # "o3-mini-2025-01-31"
@@ -37,7 +37,7 @@ question = "What are the unique set of merchants in the payments data?"
 guidelines = "Answer must be a comma separated list of the merchant names. If a question does not have a relevant or applicable answer for the task, please respond with 'Not Applicable'."
 
 PROMPT = PROMPT.format(
-    context_files=CONTEXT_FILENAMES,
+    context_files=context_files,
     question=question,
     guidelines=guidelines
 )
