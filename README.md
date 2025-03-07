@@ -13,3 +13,5 @@ This repository contains the data agent code for the DABstep benchmark.
 - [DABStep: Data Agent Benchmark for Multi-step Reasoning](https://huggingface.co/blog/dabstep)
 - [Data Agent Benchmark for Multi-step Reasoning (DABstep) Dataset](https://huggingface.co/datasets/adyen/DABstep)
 - [smolagents](https://huggingface.co/docs/smolagents/index)
+- [🤗 AI Agents Course](https://huggingface.co/learn/agents-course)
+- [Integrate Langfuse with smolagents](https://langfuse.com/docs/integrations/smolagents)

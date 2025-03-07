@@ -1,3 +1,4 @@
+import base64
 import os
 import shutil
 from huggingface_hub import hf_hub_download
@@ -13,6 +14,29 @@ CONTEXT_FILENAMES = [
     "data/context/merchant_data.json",
     "data/context/manual.md",
 ]
+
+
+def setup_langfuse():
+    from dotenv import load_dotenv
+    from opentelemetry.sdk.trace import TracerProvider
+    from openinference.instrumentation.smolagents import SmolagentsInstrumentor
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+ 
+    load_dotenv()
+
+    LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+    LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+    LANGFUSE_HOST = os.getenv("LANGFUSE_HOST")
+
+    LANGFUSE_AUTH=base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
+    os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = f"{LANGFUSE_HOST}/api/public/otel" # EU data region
+    os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {LANGFUSE_AUTH}"
+
+    trace_provider = TracerProvider()
+    trace_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+    
+    SmolagentsInstrumentor().instrument(tracer_provider=trace_provider)
 
 
 def download_dataset(data_destination_dir: str = "/tmp/DABstep-data"):

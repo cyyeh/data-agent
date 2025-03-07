@@ -9,12 +9,14 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-smolagents = {extras = ["openai"], version = "^1.10.0"}
+smolagents = {extras = ["openai", "telemetry"], version = "^1.10.0"}
 datasets = "^3.3.2"
 python-dotenv = "^1.0.1"
 dabstep-benchmark = {git = "https://git@hf.co/spaces/adyen/DABstep.git", rev = "main"}
 ipykernel = "^6.29.5"
-
+opentelemetry-sdk = "^1.30.0"
+opentelemetry-exporter-otlp = "^1.30.0"
+openinference-instrumentation-smolagents = "^0.1.6"
 
 [build-system]
 requires = ["poetry-core"]

@@ -2,10 +2,11 @@ from dotenv import load_dotenv
 from smolagents import CodeAgent
 from smolagents.models import OpenAIServerModel
 
-from utils import download_dataset, CONTEXT_FILENAMES, clean_reasoning_trace
+from utils import download_dataset, CONTEXT_FILENAMES, clean_reasoning_trace, setup_langfuse
 
 load_dotenv()
 
+setup_langfuse()
 download_dataset()
 
 
