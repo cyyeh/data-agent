@@ -109,8 +109,9 @@ def run_benchmark(
     agent_answers = []
     for task in dataset:
         with tracer.start_as_current_span("Smolagent-Trace") as span:
+            tid = str(task['task_id'])
             span.set_attribute("langfuse.session.id", session_id)
-            tid = task['task_id']
+            span.set_attribute("langfuse.user.id", tid)
 
             prompt = PROMPT.format(
                 context_files=context_files,
@@ -121,8 +122,7 @@ def run_benchmark(
             answer = agent.run(prompt)
 
             task_answer = {
-                "trace_id": span.get_span_context().trace_id,
-                "task_id": str(tid),
+                "task_id": tid,
                 "agent_answer": str(answer),
                 "reasoning_trace": str(clean_reasoning_trace(agent.memory.steps))
             }
@@ -152,7 +152,6 @@ def eval_accuracy(
     task_scores_df = pd.DataFrame(task_scores)
     task_scores_df["correct_answer"] = tasks_with_gt_df["answer"]
     task_scores_df["question"] = tasks_with_gt_df["question"]
-    task_scores_df["trace_id"] = agent_answers_df["trace_id"]
     accuracy = task_scores_df["score"].mean()
 
     if save_eval_df:
