@@ -1,7 +1,7 @@
 import datasets
 import pandas as pd
 from dotenv import load_dotenv
-from smolagents import CodeAgent, OpenAIServerModel
+from smolagents import CodeAgent, OpenAIServerModel, FinalAnswerTool
 
 from utils import download_dataset, setup_langfuse, run_benchmark, eval_accuracy
 
@@ -12,9 +12,18 @@ if __name__ == "__main__":
     tracer = setup_langfuse()
     context_files = download_dataset()
 
-    # "gpt-4o-mini-2024-07-18"
-    # "o3-mini-2025-01-31"
-    # "o1-mini-2024-09-12"
+    models = {
+        "gpt-4o-mini-2024-07-18": {
+            "temperature": 0.0,
+            "seed": 0,
+            "max_completion_tokens": 4096,
+        },
+        "o3-mini-2025-01-31": {
+            "seed": 0,
+            "max_completion_tokens": 4096,
+            "reasoning_effort": "low",
+        },
+    }
     MODEL_ID = "gpt-4o-mini-2024-07-18"
     MAX_STEPS = 7
 
@@ -22,9 +31,7 @@ if __name__ == "__main__":
         tools=[],
         model=OpenAIServerModel(
             MODEL_ID,
-            temperature=0.0,
-            seed=0,
-            max_completion_tokens=4096,
+            **models[MODEL_ID]
         ),
         additional_authorized_imports=["numpy", "pandas", "json", "csv", "os", "glob", "markdown"],
         max_steps=MAX_STEPS,

@@ -26,3 +26,4 @@ poetry run python main.py
 - [smolagents](https://huggingface.co/docs/smolagents/index)
 - [🤗 AI Agents Course](https://huggingface.co/learn/agents-course)
 - [Integrate Langfuse with smolagents](https://langfuse.com/docs/integrations/smolagents)
+- [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)
