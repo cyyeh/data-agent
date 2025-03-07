@@ -5,7 +5,6 @@ import json
 import uuid
 import pandas as pd
 from datetime import datetime
-from typing import Tuple
 from pathlib import Path
 from opentelemetry.trace import Tracer
 
@@ -68,7 +67,7 @@ def setup_langfuse() -> Tracer:
 
 
 def download_dataset(data_destination_dir: str = "/tmp/DABstep-data"):
-    if os.path.exists(data_destination_dir):
+    if Path(data_destination_dir).exists():
         shutil.rmtree(data_destination_dir)
 
     for filename in CONTEXT_FILENAMES:
@@ -83,7 +82,7 @@ def download_dataset(data_destination_dir: str = "/tmp/DABstep-data"):
     context_files = [f"{data_destination_dir}/{filename}" for filename in CONTEXT_FILENAMES]
 
     for file in context_files:
-        assert os.path.exists(file), f"{file} does not exist."
+        assert Path(file).exists(), f"{file} does not exist."
 
     return context_files
 
@@ -122,6 +121,7 @@ def run_benchmark(
             answer = agent.run(prompt)
 
             task_answer = {
+                "trace_id": span.get_span_context().trace_id,
                 "task_id": str(tid),
                 "agent_answer": str(answer),
                 "reasoning_trace": str(clean_reasoning_trace(agent.memory.steps))
@@ -152,9 +152,13 @@ def eval_accuracy(
     task_scores_df = pd.DataFrame(task_scores)
     task_scores_df["correct_answer"] = tasks_with_gt_df["answer"]
     task_scores_df["question"] = tasks_with_gt_df["question"]
+    task_scores_df["trace_id"] = agent_answers_df["trace_id"]
     accuracy = task_scores_df["score"].mean()
 
     if save_eval_df:
+        if not Path("outputs").exists():
+            Path("outputs").mkdir(parents=True, exist_ok=True)
+
         task_scores_df.to_csv(eval_df_path, index=False)
 
     return accuracy
