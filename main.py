@@ -43,11 +43,10 @@ if __name__ == "__main__":
     )
 
     # evaluation
-    accuracy, task_scores_df = eval_accuracy(
+    accuracy = eval_accuracy(
         agent_answers_df=pd.DataFrame(agent_answers),
         tasks_with_gt_df=eval_dataset.to_pandas(),
-        return_eval_df=True
+        save_eval_df=True,
     )
 
     print(f"Accuracy: {accuracy}")
-    print(task_scores_df)

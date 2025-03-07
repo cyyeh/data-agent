@@ -4,6 +4,7 @@ import shutil
 import json
 import uuid
 import pandas as pd
+from datetime import datetime
 from typing import Tuple
 from pathlib import Path
 from opentelemetry.trace import Tracer
@@ -144,15 +145,16 @@ def write_jsonl(data: list[dict], filepath: Path) -> None:
 def eval_accuracy(
     agent_answers_df: pd.DataFrame,
     tasks_with_gt_df: pd.DataFrame,
-    return_eval_df: bool = False
-) -> Tuple[float, pd.DataFrame | None]:
+    save_eval_df: bool = False,
+    eval_df_path: str = f"outputs/eval_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+) -> float:
     task_scores = evaluate(agent_answers=agent_answers_df, tasks_with_gt=tasks_with_gt_df)
     task_scores_df = pd.DataFrame(task_scores)
     task_scores_df["correct_answer"] = tasks_with_gt_df["answer"]
     task_scores_df["question"] = tasks_with_gt_df["question"]
     accuracy = task_scores_df["score"].mean()
 
-    if return_eval_df:
-        return accuracy, task_scores_df
-    else:
-        return accuracy, None
+    if save_eval_df:
+        task_scores_df.to_csv(eval_df_path, index=False)
+
+    return accuracy
